@@ -148,15 +148,23 @@ async def execute_one_market_scan(target_device_id=None, minimal_bootstrap=False
         except Exception as e:
             app.logger.error(f"Error during core scan execution: {e}")
 
+#def run_loop_in_bg():
+#    local_loop = asyncio.new_event_loop()
+#    asyncio.set_event_loop(local_loop)
+#    while True:
+#        try:
+#            local_loop.run_until_complete(execute_one_market_scan())
+#        except Exception as e:
+#            print(f"Background Loop Error: {e}")
+#        time.sleep(30)  
 def run_loop_in_bg():
-    local_loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(local_loop)
     while True:
         try:
-            local_loop.run_until_complete(execute_one_market_scan())
+            # Menggunakan asyncio.run() agar loop diinisialisasi bersih per siklus eksekusi
+            asyncio.run(execute_one_market_scan())
         except Exception as e:
             print(f"Background Loop Error: {e}")
-        time.sleep(30)  
+        time.sleep(30)
 
 @app.before_request
 def trigger_engine_startup():
