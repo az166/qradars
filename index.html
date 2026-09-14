@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RADAR QUANTUM MARKET ENGINE</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body { background-color: #0b0f19; color: #f3f4f6; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; }
+        .glass-panel { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body class="p-4 md:p-6 min-h-screen">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center p-5 glass-panel rounded-xl gap-4 shadow-2xl">
+            <div>
+                <h1 class="text-xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500">
+                    QUANTUM RADAR 
+                </h1>
+                <p class="text-xs text-gray-400 mt-1">Asset Data is Stored Securely in Your Browser Cache</p>
+            </div>
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-3">
+                <div id="btc-badge" class="text-xs font-mono px-3 py-1.5 rounded-xl border border-gray-800 bg-black/40 text-gray-400">
+                    BTC PROTECTION: MONITORING
+                </div>
+                <div class="flex items-center gap-3 bg-black/40 px-4 py-2 rounded-xl border border-gray-800">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                    </span>
+                    <span id="sync-status" class="text-xs font-mono text-cyan-400">CONNECTING CORE</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="md:col-span-2 p-4 glass-panel rounded-xl flex flex-col sm:flex-row items-end gap-3 shadow-md">
+                <div class="w-full">
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Add New Watchlist Asset</label>
+                    <input type="text" id="new-coin-name" placeholder="Enter coin symbol (e.g. SOL)..." class="w-full bg-black/50 border border-gray-800 px-3 py-2 rounded-lg text-white font-bold text-sm focus:outline-none focus:border-cyan-500 uppercase">
+                </div>
+                <div class="w-full sm:w-auto">
+                    <button onclick="addNewCustomCoin()" class="w-full sm:w-max bg-gradient-to-r from-cyan-600 to-indigo-600 text-white hover:from-cyan-500 hover:to-indigo-500 px-5 py-2 rounded-lg text-xs font-bold transition shadow-lg h-9 cursor-pointer">
+                        + Add Asset
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-4 glass-panel rounded-xl flex flex-col justify-end shadow-md">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Search Inside Table</label>
+                <div class="relative">
+                    <input type="text" id="search-input" oninput="handleSearchFilter()" placeholder="Type ticker name..." class="w-full bg-black/50 border border-gray-800 pl-8 pr-3 py-2 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500 uppercase font-mono">
+                    <span class="absolute left-2.5 top-2.5 text-gray-600 text-xs">🔍</span>
+                </div>
+            </div>
+        </section>
+
+        <main class="glass-panel rounded-xl overflow-hidden shadow-2xl border border-gray-900">
+            <div class="overflow-x-auto w-full">
+                <table class="w-full text-left border-collapse table-fixed min-w-[1100px]">
+                    <thead>
+                        <tr class="bg-gray-950/80 text-gray-400 text-xs font-bold uppercase tracking-wider border-b border-gray-800">
+                            <th class="p-4 w-[28%]">Coin / Structural & Predictive Analysis</th>
+                            <th class="p-4 w-[12%]">Live Price</th>
+                            <th class="p-4 text-center w-[7%]">➕</th>
+                            <th class="p-4 text-center w-[7%]">Send</th>
+                            <th class="p-4 text-center w-[13%]">Status</th>
+                            <th class="p-4 w-[18%]">Asset Performance & TP Progress</th>
+                            <th class="p-4 text-right w-[15%]">ATR Strategic Matrix</th>
+                        </tr>
+                    </thead>
+                    <tbody id="market-rows" class="divide-y divide-gray-900/60 text-sm font-medium">
+                        <tr>
+                            <td colspan="7" class="p-8 text-center text-gray-500 font-mono animate-pulse">
+                                Initializing secure browser cache integration...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div id="manage-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl w-full max-w-md shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-bold text-white">Manage Asset Parameters: <span id="modal-coin-title" class="text-cyan-400"></span></h3>
+                <button onclick="deleteAssetFromCache()" class="bg-rose-600/20 text-rose-400 hover:bg-rose-600/40 border border-rose-500/30 px-2 py-1 rounded text-xs font-bold transition cursor-pointer">
+                    🗑 Delete Asset
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Asset Volume (Amount)</label>
+                    <input type="number" id="input-amount" step="any" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded text-white text-sm focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Entry Price (Cost Base)</label>
+                    <input type="number" id="input-entry" step="any" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded text-white text-sm focus:outline-none focus:border-cyan-500">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-5">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded font-bold transition hover:bg-slate-700 cursor-pointer">Cancel</button>
+                <button onclick="saveModalDataToCache()" class="px-4 py-2 bg-cyan-600 text-white text-xs rounded font-bold transition hover:bg-cyan-500 cursor-pointer">Save Parameters</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTargetCoin = "";
+        let globalCachedData = [];
+        let binanceWS = null;
+        let currentActiveStreams = ""; 
+
+        function getOrCreateDeviceID() {
+            let id = localStorage.getItem('quantum_device_id');
+            if (!id) {
+                id = 'dev_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now();
+                localStorage.setItem('quantum_device_id', id);
+            }
+            return id;
+        }
+
+        function getLocalPortfolio() {
+            const data = localStorage.getItem('quantum_portfolio');
+            return data ? JSON.parse(data) : {};
+        }
+
+        function saveLocalPortfolio(portfolio) {
+            localStorage.setItem('quantum_portfolio', JSON.stringify(portfolio));
+        }
+
+        function formatQuantumPrice(val) {
+            if (val === undefined || val === null || isNaN(val)) return "-";
+            if (val === 0) return "$0.00";
+            const num = parseFloat(val);
+            if (num < 1.0) {
+                return "$" + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 });
+            } else {
+                return "$" + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+            }
+        }
+
+        function openModal(coin, amount, entry) {
+            currentTargetCoin = coin;
+            document.getElementById('modal-coin-title').innerText = coin;
+            document.getElementById('input-amount').value = amount || 0;
+            document.getElementById('input-entry').value = entry || 0;
+            document.getElementById('manage-modal').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('manage-modal').classList.add('hidden'); }
+
+        function saveModalDataToCache() {
+            const coin = document.getElementById('modal-coin-title').innerText;
+            const portfolio = getLocalPortfolio();
+
+            portfolio[coin] = {
+                amount: parseFloat(document.getElementById('input-amount').value) || 0,
+                costPrice: parseFloat(document.getElementById('input-entry').value) || 0
+            };
+
+            saveLocalPortfolio(portfolio);
+            closeModal();
+            updateDashboardData(true); 
+        }
+
+        function addNewCustomCoin() {
+            const coinInput = document.getElementById('new-coin-name');
+            let coinName = coinInput.value.trim().toUpperCase();
+
+            if (coinName.endsWith("USDT")) {
+                coinName = coinName.slice(0, -4);
+            }
+
+            if (!coinName) return;
+
+            const portfolio = getLocalPortfolio();
+            
+            if (!portfolio[coinName]) {
+                portfolio[coinName] = { amount: 0, costPrice: 0 };
+                saveLocalPortfolio(portfolio);
+            }
+
+            coinInput.value = "";
+            updateDashboardData(true); 
+        }
+
+        function deleteAssetFromCache() {
+            const coin = document.getElementById('modal-coin-title').innerText;
+            const portfolio = getLocalPortfolio();
+
+            if (portfolio[coin] !== undefined) {
+                delete portfolio[coin];
+                saveLocalPortfolio(portfolio);
+            }
+            closeModal();
+            updateDashboardData(true); 
+        }
+
+        async function sendTelegramManual(btn, coinStr) {
+            const coinData = globalCachedData.find(c => c && c.koin === coinStr);
+            if (!coinData) return;
+
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="inline-block animate-spin text-xs">⏳</span>`;
+
+            try {
+                const response = await fetch('/api/telegram/send_manual', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(coinData)
+                });
+
+                if (response.ok) {
+                    btn.className = "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded text-xs font-bold";
+                    btn.innerHTML = "✓ Sent";
+                    setTimeout(() => {
+                        btn.className = "bg-amber-600/10 text-amber-400 hover:bg-amber-600/30 border border-amber-500/20 px-2.5 py-1 rounded text-xs font-bold transition flex items-center justify-center gap-1 mx-auto cursor-pointer";
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
+                    }, 3000);
+                } else {
+                    alert("Failed to send Telegram alert.");
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        }
+
+        function handleSearchFilter() { renderTableRows(globalCachedData); }
+
+        function extractTrendData(coin) {
+            return {
+                shortTerm: coin.tren_pendek || coin.prediksi_tren || "SCANNING",
+                longTerm: coin.tren_panjang || "ANALYZING",
+                probability: coin.probabilitas_prediksi || "50.0%"
+            };
+        }
+
+        // ==================== LIVE REALTIME WEBSOCKET MANAGER ====================
+        function initBinanceWebSocket(coins) {
+            if (!coins || !Array.isArray(coins) || coins.length === 0) return;
+
+            const streams = coins
+                .filter(c => c && c.koin)
+                .map(c => {
+                    const symbolClean = c.koin.toLowerCase().endsWith('usdt') ? c.koin.toLowerCase() : `${c.koin.toLowerCase()}usdt`;
+                    return `${symbolClean}@ticker`;
+                })
+                .join('/');
+
+            if (!streams) return;
+
+            if (binanceWS && currentActiveStreams === streams) return; 
+
+            if (binanceWS) {
+                try { binanceWS.close(); } catch(e) {}
+            }
+
+            currentActiveStreams = streams;
+            const wsUrl = `wss://stream.binance.com:9443/stream?streams=${streams}`;
+
+            binanceWS = new WebSocket(wsUrl);
+
+            binanceWS.onmessage = (event) => {
+                try {
+                    const msgData = JSON.parse(event.data);
+                    const tickerData = msgData.data;
+
+                    if (!tickerData || !tickerData.s) return;
+
+                    const symbolFromWs = tickerData.s.toUpperCase();
+                    const livePrice = parseFloat(tickerData.c); 
+                    const priceChangePct = parseFloat(tickerData.P); 
+
+                    const cachedCoin = globalCachedData.find(c => {
+                        if (!c || !c.koin) return false;
+                        const k = c.koin.toUpperCase();
+                        return k === symbolFromWs || `${k}USDT` === symbolFromWs;
+                    });
+
+                    if (cachedCoin) {
+                        cachedCoin.harga = livePrice;
+                        cachedCoin.persen_harga = priceChangePct;
+
+                        if (cachedCoin.is_portfolio && cachedCoin.entry > 0 && cachedCoin.amount > 0) {
+                            cachedCoin.current_value = cachedCoin.amount * livePrice;
+                            const initialVal = cachedCoin.amount * cachedCoin.entry;
+                            cachedCoin.pnl_val = cachedCoin.current_value - initialVal;
+                            cachedCoin.pnl_pct = initialVal > 0 ? (cachedCoin.pnl_val / initialVal) * 100 : 0.0;
+
+                            if (livePrice >= cachedCoin.tp) {
+                                cachedCoin.status_aksi = "TAKE PROFIT";
+                            } else if (livePrice <= cachedCoin.cl) {
+                                cachedCoin.status_aksi = "CUT LOSS";
+                            } else {
+                                cachedCoin.status_aksi = "HOLDING";
+                            }
+                        }
+
+                        updateSingleRowDOM(cachedCoin);
+                    }
+                } catch (err) {
+                    // Fail-safe stream handler
+                }
+            };
+
+            binanceWS.onerror = (err) => { console.error("WebSocket Error: ", err); };
+            binanceWS.onclose = () => {
+                currentActiveStreams = "";
+                setTimeout(() => { initBinanceWebSocket(globalCachedData); }, 5000);
+            };
+        }
+
+        function updateSingleRowDOM(coin) {
+            if (!coin || !coin.koin) return;
+            const rowId = `row-coin-${coin.koin}`;
+            const tr = document.getElementById(rowId);
+            if (!tr) return;
+
+            const trendContainer = tr.querySelector('.cell-trend-analysis');
+            if (trendContainer) {
+                const trends = extractTrendData(coin);
+                let shortTrendColor = trends.shortTerm.includes("BULLISH") || trends.shortTerm.includes("UP") ? 'text-emerald-400' : trends.shortTerm.includes("BEARISH") || trends.shortTerm.includes("DOWN") ? 'text-rose-400' : 'text-slate-400';
+                let longTrendColor = trends.longTerm.includes("BULLISH") ? 'text-emerald-400' : trends.longTerm.includes("BEARISH") ? 'text-rose-400' : 'text-slate-400';
+
+                trendContainer.innerHTML = `
+                    <div class="text-slate-400 truncate">ST: <span class="${shortTrendColor} font-bold">${trends.shortTerm}</span> <span class="text-slate-600">(${trends.probability})</span></div>
+                    <div class="text-slate-400 truncate">LT: <span class="${longTrendColor} font-bold">${trends.longTerm}</span></div>
+                `;
+            }
+
+            const priceTd = tr.querySelector('.cell-live-price');
+            if (priceTd) {
+                const priceChangeClass = (coin.persen_harga || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                const sign = (coin.persen_harga || 0) >= 0 ? '+' : '';
+                priceTd.innerHTML = `
+                    <div class="text-white font-bold truncate">${formatQuantumPrice(coin.harga)}</div>
+                    <div class="text-xs ${priceChangeClass} font-bold mt-0.5 truncate">${sign}${(coin.persen_harga || 0).toFixed(2)}%</div>
+                `;
+            }
+
+            const statusSpan = tr.querySelector('.cell-plan-status span');
+            if (statusSpan) {
+                let statusBadgeClass = 'border-gray-800 text-gray-400';
+                if (coin.status_aksi === 'STRONG BUY' || coin.status_aksi === 'BUY STAGE') statusBadgeClass = 'border-emerald-500/30 text-emerald-400 bg-emerald-950/20';
+                if (coin.status_aksi === 'TAKE PROFIT') statusBadgeClass = 'border-amber-500/30 text-amber-400 bg-amber-950/20';
+                if (coin.status_aksi === 'CUT LOSS') statusBadgeClass = 'border-rose-500/40 text-rose-400 bg-rose-950/20';
+                if (coin.status_aksi === 'HOLDING') statusBadgeClass = 'border-emerald-500/20 text-emerald-500/90 bg-emerald-950/10';
+
+                statusSpan.className = `border px-2 py-1 rounded-md text-[11px] font-mono font-bold block w-full truncate ${statusBadgeClass}`;
+                statusSpan.innerText = `● ${coin.status_aksi}`;
+            }
+
+            const performanceTd = tr.querySelector('.cell-performance');
+            if (performanceTd && coin.is_portfolio && coin.entry > 0) {
+                let progressPct = 0;
+                if (coin.tp > coin.entry && coin.harga >= coin.entry) {
+                    const denom = coin.tp - coin.entry;
+                    progressPct = denom > 0 ? Math.min(100, Math.max(0, ((coin.harga - coin.entry) / denom) * 100)) : 0;
+                }
+                const pnlColor = (coin.pnl_val || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                const pnlSign = (coin.pnl_val || 0) >= 0 ? '+' : '';
+                performanceTd.innerHTML = `
+                    <div class="flex flex-col gap-1 w-full max-w-[160px]">
+                        <div class="flex items-center gap-2">
+                            <div class="w-full bg-gray-950 rounded-full h-1.5 overflow-hidden border border-gray-800">
+                                <div class="bg-gradient-to-r from-cyan-500 to-indigo-500 h-1.5 rounded-full" style="width: ${progressPct.toFixed(0)}%"></div>
+                            </div>
+                            <span class="text-xs font-mono font-bold text-cyan-400">${progressPct.toFixed(0)}%</span>
+                        </div>
+                        <div class="text-xs font-mono flex justify-between gap-1 overflow-hidden">
+                            <span class="text-gray-400 truncate">Hold: $${(coin.current_value || 0).toFixed(2)}</span>
+                            <span class="${pnlColor} font-bold truncate">${pnlSign}${(coin.pnl_pct || 0).toFixed(1)}%</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const matrixTd = tr.querySelector('.cell-matrix-strategic');
+            if (matrixTd && coin.entry > 0) {
+                matrixTd.innerHTML = `
+                    <div class="text-gray-400 truncate">Cost: <span class="text-gray-200">${formatQuantumPrice(coin.entry)}</span></div>
+                    <div class="text-emerald-400 font-bold mt-0.5 truncate">TP: <span>${formatQuantumPrice(coin.tp)}</span></div>
+                    <div class="text-rose-400 font-bold mt-0.5 truncate">CL: <span>${formatQuantumPrice(coin.cl)}</span></div>
+                    <div class="font-mono mt-1 text-xs px-2 py-0.5 border rounded block text-right border-cyan-500/40 text-cyan-400 bg-cyan-950/20 truncate" title="Projected Range: ${formatQuantumPrice(coin.proyeksi_bawah)} - ${formatQuantumPrice(coin.proyeksi_atas)}">
+                        ${formatQuantumPrice(coin.saran_entry)}
+                    </div>
+                `;
+            }
+        }
+        // =========================================================================
+
+        function renderTableRows(coins) {
+            const tbody = document.getElementById('market-rows');
+            const searchQuery = document.getElementById('search-input').value.trim().toUpperCase();
+
+            if (!coins || !Array.isArray(coins) || coins.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-500 font-mono animate-pulse">⏳ Cold-starting engine. Compiling initial market scan from Binance API...</td></tr>`;
+                return;
+            }
+
+            let rowsHtml = '';
+            coins.forEach(coin => {
+                if (!coin || !coin.koin) return;
+                if (searchQuery && !coin.koin.includes(searchQuery)) return;
+
+                const priceChangeClass = (coin.persen_harga || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                const isPortfolioStyle = coin.is_portfolio ? 'bg-slate-900/60 border-l-4 border-cyan-500' : '';
+
+                let statusBadgeClass = 'border-gray-800 text-gray-400';
+                if (coin.status_aksi === 'STRONG BUY' || coin.status_aksi === 'BUY STAGE') statusBadgeClass = 'border-emerald-500/30 text-emerald-400 bg-emerald-950/20';
+                if (coin.status_aksi === 'TAKE PROFIT') statusBadgeClass = 'border-amber-500/30 text-amber-400 bg-amber-950/20';
+                if (coin.status_aksi === 'CUT LOSS') statusBadgeClass = 'border-rose-500/40 text-rose-400 bg-rose-950/20';
+                if (coin.status_aksi === 'HOLDING') statusBadgeClass = 'border-emerald-500/20 text-emerald-500/90 bg-emerald-950/10';
+
+                let faseLabel = coin.fase || "SCANNING";
+                let faseColorClass = 'text-cyan-400';
+                if (faseLabel.includes("WEAK VOL")) {
+                    faseColorClass = 'text-amber-500 font-bold';
+                    faseLabel = "⚠️ PULLBACK: " + faseLabel;
+                } else if (faseLabel.includes("ENGINE LOCKED")) {
+                    faseColorClass = 'text-rose-500 font-bold';
+                    faseLabel = "❌ " + faseLabel;
+                }
+
+                const trends = extractTrendData(coin);
+                let shortTrendColor = trends.shortTerm.includes("BULLISH") || trends.shortTerm.includes("UP") ? 'text-emerald-400' : trends.shortTerm.includes("BEARISH") || trends.shortTerm.includes("DOWN") ? 'text-rose-400' : 'text-slate-400';
+                let longTrendColor = trends.longTerm.includes("BULLISH") ? 'text-emerald-400' : trends.longTerm.includes("BEARISH") ? 'text-rose-400' : 'text-slate-400';
+
+                let progressPct = 0;
+                if (coin.tp > coin.entry && coin.harga >= coin.entry) {
+                    const denom = coin.tp - coin.entry;
+                    progressPct = denom > 0 ? Math.min(100, Math.max(0, ((coin.harga - coin.entry) / denom) * 100)) : 0;
+                }
+
+                let performanceContent = '';
+                if (coin.is_portfolio && coin.entry > 0) {
+                    const pnlColor = (coin.pnl_val || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                    const pnlSign = (coin.pnl_val || 0) >= 0 ? '+' : '';
+                    performanceContent = `
+                        <div class="flex flex-col gap-1 w-full max-w-[160px]">
+                            <div class="flex items-center gap-2">
+                                <div class="w-full bg-gray-950 rounded-full h-1.5 overflow-hidden border border-gray-800">
+                                    <div class="bg-gradient-to-r from-cyan-500 to-indigo-500 h-1.5 rounded-full" style="width: ${progressPct.toFixed(0)}%"></div>
+                                </div>
+                                <span class="text-xs font-mono font-bold text-cyan-400">${progressPct.toFixed(0)}%</span>
+                            </div>
+                            <div class="text-xs font-mono flex justify-between gap-1 overflow-hidden">
+                                <span class="text-gray-400 truncate">Hold: $${(coin.current_value || 0).toFixed(2)}</span>
+                                <span class="${pnlColor} font-bold truncate">${pnlSign}${(coin.pnl_pct || 0).toFixed(1)}%</span>
+                            </div>
+                        </div>
+                    `;
+                } else if (coin.is_portfolio && coin.entry === 0) {
+                    performanceContent = `<div class="text-xs font-mono text-cyan-500/80 truncate"><span class="bg-cyan-950/40 border border-cyan-900/60 px-2 py-1 rounded block truncate">🔮 WATCHLIST</span></div>`;
+                } else {
+                    performanceContent = `<div class="text-xs font-mono text-gray-500 truncate"><span class="bg-gray-950 border border-gray-800 px-2 py-1 rounded block truncate">SCANNER</span></div>`;
+                }
+
+                let strategicBlock = '';
+                if (coin.entry > 0) {
+                    strategicBlock = `
+                        <div class="text-gray-400 truncate">Cost: <span class="text-gray-200">${formatQuantumPrice(coin.entry)}</span></div>
+                        <div class="text-emerald-400 font-bold mt-0.5 truncate">TP: <span>${formatQuantumPrice(coin.tp)}</span></div>
+                        <div class="text-rose-400 font-bold mt-0.5 truncate">CL: <span>${formatQuantumPrice(coin.cl)}</span></div>
+                        <div class="font-mono mt-1 text-xs px-2 py-0.5 border rounded block text-right border-cyan-500/40 text-cyan-400 bg-cyan-950/20 truncate" title="Projected Range: ${formatQuantumPrice(coin.proyeksi_bawah)} - ${formatQuantumPrice(coin.proyeksi_atas)}">
+                            ${formatQuantumPrice(coin.saran_entry)}
+                        </div>
+                    `;
+                } else {
+                    const isPullbackMode = coin.fase && coin.fase.includes("WEAK VOL");
+                    const entryColor = isPullbackMode ? 'text-amber-400 border-amber-900 bg-amber-950/20' : 'text-cyan-400 border-cyan-900 bg-cyan-950/20';
+                    const labelPrefix = isPullbackMode ? '🎯 DIP' : '🚀 ENTRY';
+
+                    strategicBlock = `
+                        <div class="text-gray-500 truncate">Range: <span class="text-gray-400 text-[11px] font-mono">${formatQuantumPrice(coin.proyeksi_bawah)} - ${formatQuantumPrice(coin.proyeksi_atas)}</span></div>
+                        <div class="font-mono mt-1 text-xs px-2 py-1 border rounded block text-right ${entryColor} truncate">
+                            <span class="text-[10px] block opacity-60 font-sans">${labelPrefix}</span>
+                            ${formatQuantumPrice(coin.saran_entry)}
+                        </div>
+                    `;
+                }
+
+                rowsHtml += `
+                    <tr id="row-coin-${coin.koin}" class="${isPortfolioStyle} hover:bg-gray-900/40 transition border-b border-gray-900 min-h-[6rem]">
+                        <td class="p-4 overflow-hidden">
+                            <div class="flex items-center gap-1.5 w-full">
+                                <span class="text-xs flex-shrink-0">${coin.is_portfolio ? '⚡' : '🔍'}</span>
+                                <span class="font-black text-white text-base tracking-wide truncate max-w-[70px]" title="${coin.koin}">${coin.koin}</span>
+                                <span class="text-[10px] bg-black/40 text-gray-400 px-1 rounded font-mono flex-shrink-0">V:${(coin.rasio || 0).toFixed(1)}x</span>
+                                <span class="text-[10px] bg-indigo-950/40 text-indigo-400 border border-indigo-900 px-1 rounded font-mono flex-shrink-0">W:${coin.whale || 0}%</span>
+                                <span class="text-[10px] bg-cyan-950/50 text-cyan-400 border border-cyan-900 px-1 rounded font-mono flex-shrink-0">S:${coin.skor || 0}</span>
+                            </div>
+                            <div class="text-xs ${faseColorClass} mt-0.5 uppercase tracking-wider font-semibold truncate" title="${faseLabel}">${faseLabel}</div>
+                            
+                            <div class="cell-trend-analysis text-[11px] mt-0.5 space-y-0.5">
+                                <div class="text-slate-400 truncate">ST: <span class="${shortTrendColor} font-bold">${trends.shortTerm}</span> <span class="text-slate-600">(${trends.probability})</span></div>
+                                <div class="text-slate-400 truncate">LT: <span class="${longTrendColor} font-bold">${trends.longTerm}</span></div>
+                            </div>
+                        </td>
+                        <td class="p-4 font-mono overflow-hidden cell-live-price">
+                            <div class="text-white font-bold truncate">${formatQuantumPrice(coin.harga)}</div>
+                            <div class="text-xs ${priceChangeClass} font-bold mt-0.5 truncate">${(coin.persen_harga || 0) >= 0 ? '+' : ''}${(coin.persen_harga || 0).toFixed(2)}%</div>
+                        </td>
+                        <td class="p-4 text-center overflow-hidden">
+                            <button onclick="openModal('${coin.koin}', ${coin.amount || 0}, ${coin.entry || 0})" class="bg-indigo-600/10 text-indigo-400 hover:bg-indigo-600/30 border border-indigo-500/20 px-2 py-1 rounded text-xs font-bold transition cursor-pointer block w-full truncate">➕</button>
+                        </td>
+                        <td class="p-4 text-center overflow-hidden">
+                            <button onclick="sendTelegramManual(this, '${coin.koin}')" class="bg-amber-600/10 text-amber-400 hover:bg-amber-600/30 border border-amber-500/20 px-2 py-1 rounded text-xs font-bold transition flex items-center justify-center gap-1 w-full cursor-pointer truncate">✈️</button>
+                        </td>
+                        <td class="p-4 text-center overflow-hidden cell-plan-status">
+                            <span class="border px-2 py-1 rounded-md text-[11px] font-mono font-bold block w-full truncate ${statusBadgeClass}">● ${coin.status_aksi}</span>
+                        </td>
+                        <td class="p-4 overflow-hidden cell-performance">${performanceContent}</td>
+                        <td class="p-4 font-mono text-right text-xs overflow-hidden cell-matrix-strategic">${strategicBlock}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = rowsHtml || `<tr><td colspan="7" class="p-8 text-center text-gray-500 font-mono">Asset not found...</td></tr>`;
+        }
+
+        async function updateDashboardData(forceRender = false) {
+            try {
+                let currentLocalPortfolio = getLocalPortfolio();
+                if (!currentLocalPortfolio || typeof currentLocalPortfolio !== 'object') {
+                    currentLocalPortfolio = {};
+                    saveLocalPortfolio(currentLocalPortfolio);
+                }
+
+                const currentDeviceId = getOrCreateDeviceID();
+
+                const response = await fetch('/api/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        device_id: currentDeviceId,
+                        portfolio: currentLocalPortfolio 
+                    })
+                });
+
+                if (!response.ok) {
+                    document.getElementById('sync-status').innerText = 'SERVER ERROR (' + response.status + ')';
+                    setTimeout(() => updateDashboardData(false), 20000); 
+                    return;
+                }
+                const rootData = await response.json();
+
+                const btc = rootData.btc_status;
+                const btcBadge = document.getElementById('btc-badge');
+                if (btc && btc.is_safe) {
+                    btcBadge.className = "text-xs font-mono px-3 py-1.5 rounded-xl border border-emerald-900/40 bg-emerald-950/20 text-emerald-400";
+                    btcBadge.innerText = `● ${btc.reason}`;
+                } else if (btc) {
+                    btcBadge.className = "text-xs font-mono px-3 py-1.5 rounded-xl border border-rose-900/40 bg-rose-950/20 text-rose-400 animate-pulse";
+                    btcBadge.innerText = `⚠️ ${btc.reason}`;
+                }
+
+                const serverCoins = rootData.market || [];
+
+                if (globalCachedData.length === 0 || forceRender || globalCachedData.length !== serverCoins.length) {
+                    globalCachedData = serverCoins;
+                    renderTableRows(globalCachedData);
+                } else {
+                    serverCoins.forEach(srvCoin => {
+                        let localCoin = globalCachedData.find(c => c && c.koin === srvCoin.koin);
+                        if (localCoin) {
+                            localCoin.fase = srvCoin.fase;
+                            localCoin.skor = srvCoin.skor;
+                            localCoin.whale = srvCoin.whale;
+                            localCoin.rasio = srvCoin.rasio;
+                            localCoin.tren_pendek = srvCoin.tren_pendek;
+                            localCoin.tren_panjang = srvCoin.tren_panjang;
+                            localCoin.probabilitas_prediksi = srvCoin.probabilitas_prediksi;
+                            localCoin.saran_entry = srvCoin.saran_entry;
+                            localCoin.tp = srvCoin.tp;
+                            localCoin.cl = srvCoin.cl;
+                            localCoin.proyeksi_bawah = srvCoin.proyeksi_bawah;
+                            localCoin.proyeksi_atas = srvCoin.proyeksi_atas;
+
+                            updateSingleRowDOM(localCoin);
+                        }
+                    });
+                }
+
+                initBinanceWebSocket(globalCachedData);
+
+                if (globalCachedData.length > 0) {
+                    document.getElementById('sync-status').innerText = 'QUANTUM SECURE BROWSER ENGINE LIVE';
+                } else {
+                    document.getElementById('sync-status').innerText = 'ENGINE INITIALIZING, RETRYING...';
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('sync-status').innerText = 'CORE CONNECTION LOST (RETRYING)';
+            }
+
+            setTimeout(() => updateDashboardData(false), 20000);
+        }
+
+        updateDashboardData(true); 
+    </script>
+</body>
+</html>
