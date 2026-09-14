@@ -157,14 +157,20 @@ async def execute_one_market_scan(target_device_id=None, minimal_bootstrap=False
 #        except Exception as e:
 #            print(f"Background Loop Error: {e}")
 #        time.sleep(30)  
+import sys
+
 def run_loop_in_bg():
+    # Menyesuaikan event loop policy khusus untuk platform Linux / Gunicorn worker
+    if sys.platform != 'win32':
+        asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
+        
     while True:
         try:
-            # Menggunakan asyncio.run() agar loop diinisialisasi bersih per siklus eksekusi
             asyncio.run(execute_one_market_scan())
         except Exception as e:
             print(f"Background Loop Error: {e}")
         time.sleep(30)
+
 
 @app.before_request
 def trigger_engine_startup():
