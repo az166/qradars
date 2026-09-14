@@ -8,8 +8,8 @@ COIN_BLACKLIST = {'UPUSDT', 'DOWNUSDT', 'BUSDUSDT', 'USDCUSDT', 'FDUSDUSDT', 'EU
 load_dotenv()
 
 # Membaca token dengan aman menggunakan os.getenv
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "@cryptoradar_quantum")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "@cryptoradar_quantum")
 
 # Pengaman tambahan jika file .env lupa belum terisi
 if not TELEGRAM_TOKEN:
